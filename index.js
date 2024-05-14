@@ -39,14 +39,23 @@ async function run() {
       .collection("requests");
 
     app.get("/volunteers", async (req, res) => {
-      const result = await volunteerCollection.find().sort({ deadline: 1 }).toArray();
-      res.send(result)
+      const result = await volunteerCollection
+        .find()
+        .sort({ deadline: 1 })
+        .toArray();
+      res.send(result);
+    });
+    app.post("/volunteers", async (req, res) => {
+      const newVolunter = req.body;
+
+      const result = await volunteerCollection.insertOne(newVolunter);
+      res.send(result);
     });
     app.get("/volunteer/:id", async (req, res) => {
-      const id = req.params.id
-      const query = {_id: new ObjectId(id)}
-      const result =await volunteerCollection.findOne(query)
-      res.send(result)
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await volunteerCollection.findOne(query);
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection
