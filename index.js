@@ -65,6 +65,16 @@ async function run() {
       res.send(result);
     });
 
+    app.put('/volunteer/:id', async (req, res) =>{
+      const { id } = req.params;
+      const filter ={ _id: new ObjectId(id) };
+      const updateDoc = { $set: req.body };
+      const result = await volunteerCollection.updateOne(filter, updateDoc);
+      res.send(result)
+
+
+    })
+
     app.get("/managemypost/:email", async (req, res) => {
       console.log(req.params.email);
       const result = await volunteerCollection
