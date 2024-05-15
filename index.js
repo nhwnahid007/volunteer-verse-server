@@ -65,37 +65,74 @@ async function run() {
       res.send(result);
     });
 
-    app.put('/volunteer/:id', async (req, res) =>{
+    app.put("/volunteer/:id", async (req, res) => {
       const { id } = req.params;
-      const filter ={ _id: new ObjectId(id) };
+      const filter = { _id: new ObjectId(id) };
       const updateDoc = { $set: req.body };
       const result = await volunteerCollection.updateOne(filter, updateDoc);
-      res.send(result)
-
-
-    })
+      res.send(result);
+    });
 
     app.get("/managemypost/:email", async (req, res) => {
       console.log(req.params.email);
       const result = await volunteerCollection
-        .find({ 
-          organizer_email: req.params.email })
+        .find({
+          organizer_email: req.params.email,
+        })
         .toArray();
       res.send(result);
     });
 
     //be volunteer
 
+    app.get("/bevolunteers", async (req, res) => {
+      const result = await requestCollection
+        .find().toArray();
+      res.send(result);
+    });
+
+    app.get("/bevolunteer/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await requestCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.delete("/bevolunteer/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      
+      const result = await requestCollection.deleteOne(query);
+      res.send(result);
+    });
+
     app.post("/bevolunteer", async (req, res) => {
       const newBeVolunter = req.body;
-      console.log(newBeVolunter) 
-      
+      console.log(newBeVolunter);
+
       const result = await requestCollection.insertOne(newBeVolunter);
       res.send(result);
     });
 
-
-    
+    app.get("/mybevolunteerreq/:email", async (req, res) => {
+      console.log(req.params.email);
+      const result = await requestCollection
+        .find({
+          volunteer_email: req.params.email,
+        })
+        .toArray();
+      res.send(result);
+    });
+    //get all requests from db for job organizer
+    app.get("/bevolunteerreq/:email", async (req, res) => {
+      console.log(req.params.email);
+      const result = await requestCollection
+        .find({
+          organizer_email: req.params.email,
+        })
+        .toArray();
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
