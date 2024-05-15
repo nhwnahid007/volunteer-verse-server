@@ -10,12 +10,36 @@ const port = process.env.PORT || 5000;
 //middleware
 
 const corsOptions = {
-  origin: ["http://localhost:5173"],
+  origin: [
+    "http://localhost:5173",
+    "https://volunteer-verse.web.app",
+    "https://volunteer-verse.firebaseapp.com",
+  ],
   credentials: true,
 };
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser());
+
+//verify jwt middleware
+
+const verifyToken = (req, res, next) => {
+  const token = req.cookies?.token;
+  if (!token) return res.status(401).send({ message: "unauthorized access" });
+  if (token) {
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+      if (err) {
+        console.log(err);
+        return res.status(401).send({ message: "unauthorized access" });
+      }
+      console.log(decoded);
+
+      req.user = decoded;
+      next();
+    });
+  }
+};
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.omy4kgv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -56,8 +80,17 @@ async function run() {
         .send({ success: true });
     });
 
-
-    
+    //clear cookie
+    app.get("/logout", (req, res) => {
+      res
+        .clearCookie("token", {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+          maxAge: 0,
+        })
+        .send({ success: true });
+    });
 
     app.get("/volunteers", async (req, res) => {
       const result = await volunteerCollection
@@ -103,8 +136,13 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/managemypost/:email", async (req, res) => {
+    app.get("/managemypost/:email", verifyToken, async (req, res) => {
       console.log(req.params.email);
+      const tokenEmail = req.user.email;
+      const email = req.params.email;
+      if (tokenEmail !== email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
       const result = await volunteerCollection
         .find({
           organizer_email: req.params.email,
@@ -137,14 +175,20 @@ async function run() {
 
     app.post("/bevolunteer", async (req, res) => {
       const newBeVolunter = req.body;
-      console.log(newBeVolunter);
 
+      const token = req.cookies.token;
+      console.log(token);
       const result = await requestCollection.insertOne(newBeVolunter);
       res.send(result);
     });
 
-    app.get("/mybevolunteerreq/:email", async (req, res) => {
-      console.log(req.params.email);
+    app.get("/mybevolunteerreq/:email", verifyToken, async (req, res) => {
+      const tokenEmail = req.user.email;
+      const email = req.params.email;
+      if (tokenEmail !== email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+
       const result = await requestCollection
         .find({
           volunteer_email: req.params.email,
@@ -153,8 +197,12 @@ async function run() {
       res.send(result);
     });
     //get all requests from db for job organizer
-    app.get("/bevolunteerreq/:email", async (req, res) => {
-      console.log(req.params.email);
+    app.get("/bevolunteerreq/:email", verifyToken, async (req, res) => {
+      const tokenEmail = req.user.email;
+      const email = req.params.email;
+      if (tokenEmail !== email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
       const result = await requestCollection
         .find({
           organizer_email: req.params.email,
@@ -164,7 +212,7 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
