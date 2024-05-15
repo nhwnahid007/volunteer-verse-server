@@ -72,6 +72,15 @@ async function run() {
       const result = await volunteerCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
+    app.patch("/allvolunteer/:id", async (req, res) => {
+      const { id } = req.params;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $inc: { volunteers_needed: -1 },
+      };
+      const result = await volunteerCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
 
     app.get("/managemypost/:email", async (req, res) => {
       console.log(req.params.email);
@@ -86,8 +95,7 @@ async function run() {
     //be volunteer
 
     app.get("/bevolunteers", async (req, res) => {
-      const result = await requestCollection
-        .find().toArray();
+      const result = await requestCollection.find().toArray();
       res.send(result);
     });
 
@@ -101,7 +109,7 @@ async function run() {
     app.delete("/bevolunteer/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      
+
       const result = await requestCollection.deleteOne(query);
       res.send(result);
     });
