@@ -84,6 +84,19 @@ async function run() {
       res.send(result);
     });
 
+    //be volunteer
+
+    app.post("/bevolunteer", async (req, res) => {
+      const newBeVolunter = req.body;
+      console.log(newBeVolunter) 
+      
+      const result = await requestCollection.insertOne(newBeVolunter);
+      res.send(result);
+    });
+
+
+    
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
