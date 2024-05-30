@@ -63,6 +63,9 @@ async function run() {
     const requestCollection = client
       .db("volunteerVerse")
       .collection("requests");
+    const blogCollection = client
+      .db("volunteerVerse")
+      .collection("blog");
 
     //jwt token
 
@@ -150,6 +153,20 @@ async function run() {
         .toArray();
       res.send(result);
     });
+
+    //add blog
+
+    app.post('/blogs', async(req,res)=>{
+      const blog = req.body;
+      const result = await blogCollection.insertOne(blog)
+      res.send(result)
+    })
+    app.get('/blogs', async(req,res)=>{
+      const result = await blogCollection.find().toArray()
+      res.send(result)
+    })
+
+
 
     //be volunteer
 
